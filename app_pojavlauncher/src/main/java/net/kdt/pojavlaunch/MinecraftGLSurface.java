@@ -7,6 +7,7 @@ import static org.lwjgl.glfw.CallbackBridge.sendMouseButton;
 import static org.lwjgl.glfw.CallbackBridge.windowHeight;
 import static org.lwjgl.glfw.CallbackBridge.windowWidth;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
@@ -28,6 +29,8 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+
+import net.kdt.pojavlaunch.customcontrols.ControlLayout;
 import net.kdt.pojavlaunch.utils.MathUtils;
 
 import net.kdt.pojavlaunch.customcontrols.gamepad.Gamepad;
@@ -170,13 +173,14 @@ public class MinecraftGLSurface extends View {
                 private boolean isCalled = false;
                 @Override
                 public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
+                    Surface tSurface = new Surface(surface);
                     if(isCalled) {
-                        JREUtils.setupBridgeWindow(new Surface(surface));
+                        JREUtils.setupBridgeWindow(tSurface);
                         return;
                     }
                     isCalled = true;
 
-                    realStart(new Surface(textureView.getSurfaceTexture()));
+                    realStart(tSurface);
                 }
 
                 @Override
@@ -206,6 +210,9 @@ public class MinecraftGLSurface extends View {
      */
     @Override
     public boolean onTouchEvent(MotionEvent e) {
+        // Kinda need to send this back to the layout
+        if(((ControlLayout)getParent()).getModifiable()) return false;
+
         // Looking for a mouse to handle, won't have an effect if no mouse exists.
         for (int i = 0; i < e.getPointerCount(); i++) {
             if(e.getToolType(i) != MotionEvent.TOOL_TYPE_MOUSE && e.getToolType(i) != MotionEvent.TOOL_TYPE_STYLUS ) continue;
@@ -382,6 +389,7 @@ public class MinecraftGLSurface extends View {
      * The event for mouse/joystick movements
      * We don't do the gamepad right now.
      */
+    @SuppressLint("NewApi")
     @Override
     public boolean dispatchGenericMotionEvent(MotionEvent event) {
         int mouseCursorIndex = -1;
@@ -597,6 +605,10 @@ public class MinecraftGLSurface extends View {
     public void refreshSize(){
         windowWidth = Tools.getDisplayFriendlyRes(Tools.currentDisplayMetrics.widthPixels, mScaleFactor);
         windowHeight = Tools.getDisplayFriendlyRes(Tools.currentDisplayMetrics.heightPixels, mScaleFactor);
+        if(mSurface == null){
+            Log.w("MGLSurface", "Attempt to refresh size on null surface");
+            return;
+        }
         if(LauncherPreferences.PREF_USE_ALTERNATE_SURFACE){
             SurfaceView view = (SurfaceView) mSurface;
             if(view.getHolder() != null){

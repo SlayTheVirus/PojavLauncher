@@ -23,6 +23,7 @@ public class MinecraftAccount {
     public String selectedVersion = "1.7.10";
     public boolean isMicrosoft = false;
     public String msaRefreshToken = "0";
+    public String xuid;
     public String skinFaceBase64;
     public long expiresAt;
     
@@ -38,6 +39,10 @@ public class MinecraftAccount {
             // Simply ignore updating skin face
             Log.w("SkinLoader", "Could not update skin face", e);
         }
+    }
+
+    public boolean isLocal(){
+        return accessToken.equals("0");
     }
     
     public void updateSkinFace() {
