@@ -108,7 +108,7 @@ public class LauncherPreferences {
 */
 
         String argLwjglLibname = "-Dorg.lwjgl.opengl.libname=";
-        for (String arg : new ArrayList<String>(Arrays.asList(PREF_CUSTOM_JAVA_ARGS.split(" ")))) {
+        for (String arg : JREUtils.parseJavaArguments(PREF_CUSTOM_JAVA_ARGS)) {
             if (arg.startsWith(argLwjglLibname)) {
                 // purge arg
                 DEFAULT_PREF.edit().putString("javaArgs",
