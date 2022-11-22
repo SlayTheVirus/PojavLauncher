@@ -175,7 +175,7 @@ public final class Tools {
 
         javaArgList.add(versionInfo.mainClass);
         javaArgList.addAll(Arrays.asList(launchArgs));
-        ctx.appendlnToLog("full args: "+javaArgList.toString());
+        // ctx.appendlnToLog("full args: "+javaArgList.toString());
         JREUtils.launchJavaVM(activity, javaArgList);
     }
 
