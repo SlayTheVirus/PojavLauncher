@@ -3,6 +3,7 @@ package net.kdt.pojavlaunch;
 import static net.kdt.pojavlaunch.Architecture.ARCH_X86;
 import static net.kdt.pojavlaunch.Tools.currentDisplayMetrics;
 import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_SUSTAINED_PERFORMANCE;
+import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_USE_ALTERNATE_SURFACE;
 import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_VIRTUAL_MOUSE_START;
 
 import static org.lwjgl.glfw.CallbackBridge.sendKeyPress;
@@ -13,6 +14,8 @@ import android.app.*;
 import android.content.*;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.*;
 import android.util.*;
 import android.view.*;
@@ -68,7 +71,7 @@ public class MainActivity extends BaseActivity {
     public ArrayAdapter<String> ingameControlsEditorArrayAdapter;
     public AdapterView.OnItemClickListener ingameControlsEditorListener;
 
-    protected volatile JMinecraftVersionList.Version mVersionInfo;
+    protected volatile String mVersionId;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -80,7 +83,12 @@ public class MainActivity extends BaseActivity {
         MCOptionUtils.load(Tools.getGameDirPath(minecraftProfile));
         GameService.startService(this);
         initLayout(R.layout.activity_basemain);
-        getWindow().setBackgroundDrawable(null);
+        CallbackBridge.addGrabListener(touchpad);
+        CallbackBridge.addGrabListener(minecraftGLView);
+
+        // Enabling this on TextureView results in a broken white result
+        if(PREF_USE_ALTERNATE_SURFACE) getWindow().setBackgroundDrawable(null);
+        else getWindow().setBackgroundDrawable(new ColorDrawable(Color.BLACK));
 
         // Set the sustained performance mode for available APIs
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
@@ -139,8 +147,8 @@ public class MainActivity extends BaseActivity {
             String version = getIntent().getStringExtra(INTENT_MINECRAFT_VERSION);
             version = version == null ? minecraftProfile.lastVersionId : version;
 
-            mVersionInfo = Tools.getVersionInfo(version);
-            isInputStackCall = mVersionInfo.arguments != null;
+            mVersionId = version;
+            isInputStackCall = Tools.getVersionInfo(mVersionId).arguments != null;
 
             Tools.getDisplayMetrics(this);
             windowWidth = Tools.getDisplayFriendlyRes(currentDisplayMetrics.widthPixels, scaleFactor);
@@ -257,6 +265,13 @@ public class MainActivity extends BaseActivity {
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        CallbackBridge.removeGrabListener(touchpad);
+        CallbackBridge.removeGrabListener(minecraftGLView);
+    }
+
+    @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
@@ -311,15 +326,13 @@ public class MainActivity extends BaseActivity {
         checkJavaArgsIsLaunchable(JREUtils.jreReleaseList.get("JAVA_VERSION"));
         // appendlnToLog("Info: Custom Java arguments: \"" + LauncherPreferences.PREF_CUSTOM_JAVA_ARGS + "\"");
 
-        Logger.getInstance().appendToLog("Info: Selected Minecraft version: " + mVersionInfo.id +
-                ((mVersionInfo.inheritsFrom == null || mVersionInfo.inheritsFrom.equals(mVersionInfo.id)) ?
-                        "" : " (" + mVersionInfo.inheritsFrom + ")"));
+        Logger.getInstance().appendToLog("Info: Selected Minecraft version: " + mVersionId);
 
 
         JREUtils.redirectAndPrintJRELog();
 
         LauncherProfiles.update();
-        Tools.launchMinecraft(this, mProfile, minecraftProfile);
+        Tools.launchMinecraft(this, mProfile, minecraftProfile, mVersionId);
     }
 
     private void checkJavaArgsIsLaunchable(String jreVersion) throws Throwable {
@@ -438,12 +451,15 @@ public class MainActivity extends BaseActivity {
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         if(isInEditor) return super.dispatchKeyEvent(event);
-        if (event.getKeyCode() == KeyEvent.KEYCODE_BACK && !touchCharInput.isEnabled()) {
-            if(event.getAction() != KeyEvent.ACTION_UP) return true; // We eat it anyway
-            sendKeyPress(LwjglGlfwKeycode.GLFW_KEY_ESCAPE);
-            return true;
+        boolean handleEvent;
+        if(!(handleEvent = minecraftGLView.processKeyEvent(event))) {
+            if (event.getKeyCode() == KeyEvent.KEYCODE_BACK && !touchCharInput.isEnabled()) {
+                if(event.getAction() != KeyEvent.ACTION_UP) return true; // We eat it anyway
+                sendKeyPress(LwjglGlfwKeycode.GLFW_KEY_ESCAPE);
+                return true;
+            }
         }
-        return minecraftGLView.processKeyEvent(event);
+        return handleEvent;
     }
 
     public static void switchKeyboardState() {

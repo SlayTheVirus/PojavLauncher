@@ -21,6 +21,8 @@
         android:process=":launcher"
         android:resizeableActivity="true"
         android:hasFragileUserData="true"
+        android:isGame="true"
+        android:appCategory="game"
         android:allowNativeHeapPointerTagging="false">
 
         <meta-data 
@@ -94,22 +96,6 @@
             <intent-filter>
                 <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
             </intent-filter>
-        </provider>
-
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="share_file"
-            android:exported="false"
-            android:grantUriPermissions="true"
-            android:permission="android.permission.MANAGE_DOCUMENTS">
-            <intent-filter>
-                <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
-            </intent-filter>
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/provider"
-                />
-
         </provider>
 
         <service android:name=".services.ProgressService"/>

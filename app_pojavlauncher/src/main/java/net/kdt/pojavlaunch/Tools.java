@@ -110,7 +110,8 @@ public final class Tools {
     }
 
 
-    public static void launchMinecraft(final Activity activity, MinecraftAccount minecraftAccount, MinecraftProfile minecraftProfile) throws Throwable {
+    public static void launchMinecraft(final Activity activity, MinecraftAccount minecraftAccount,
+                                       MinecraftProfile minecraftProfile, String versionId) throws Throwable {
         ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
         ((ActivityManager)activity.getSystemService(Context.ACTIVITY_SERVICE)).getMemoryInfo(mi);
         if(LauncherPreferences.PREF_RAM_ALLOCATION > (mi.availMem/1048576L)) {
@@ -126,9 +127,7 @@ public final class Tools {
                 memoryErrorLock.wait();
             }
         }
-
-        JMinecraftVersionList.Version versionInfo = Tools.getVersionInfo(minecraftProfile.lastVersionId);
-
+        JMinecraftVersionList.Version versionInfo = Tools.getVersionInfo(versionId);
         LauncherProfiles.update();
         String gamedirPath = Tools.getGameDirPath(minecraftProfile);
 
@@ -143,7 +142,7 @@ public final class Tools {
         OldVersionsUtils.selectOpenGlVersion(versionInfo);
 
 
-        String launchClassPath = generateLaunchClassPath(versionInfo, minecraftProfile.lastVersionId);
+        String launchClassPath = generateLaunchClassPath(versionInfo, versionId);
 
         List<String> javaArgList = new ArrayList<String>();
 
@@ -169,7 +168,7 @@ public final class Tools {
             }
             javaArgList.add("-Dlog4j.configurationFile=" + configFile);
         }
-        javaArgList.addAll(Arrays.asList(getMinecraftJVMArgs(minecraftProfile.lastVersionId, gamedirPath)));
+        javaArgList.addAll(Arrays.asList(getMinecraftJVMArgs(versionId, gamedirPath)));
         javaArgList.add("-cp");
         javaArgList.add(getLWJGL3ClassPath() + ":" + launchClassPath);
 
@@ -184,7 +183,7 @@ public final class Tools {
             if(minecraftProfile.gameDir.startsWith(Tools.LAUNCHERPROFILES_RTPREFIX))
                 return minecraftProfile.gameDir.replace(Tools.LAUNCHERPROFILES_RTPREFIX,Tools.DIR_GAME_HOME+"/");
             else
-                return Tools.DIR_GAME_HOME + minecraftProfile.gameDir;
+                return Tools.DIR_GAME_HOME + '/' + minecraftProfile.gameDir;
         }
         return Tools.DIR_GAME_NEW;
     }

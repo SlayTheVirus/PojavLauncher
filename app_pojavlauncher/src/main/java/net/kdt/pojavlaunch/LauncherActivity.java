@@ -81,10 +81,10 @@ public class LauncherActivity extends BaseActivity {
 
     /* Listener for the auth method selection screen */
     private final ExtraListener<Boolean> mSelectAuthMethod = (key, value) -> {
-        if(isFragmentVisible(SelectAuthFragment.TAG)
-                || isFragmentVisible(LocalLoginFragment.TAG)
-                || isFragmentVisible(MicrosoftLoginFragment.TAG)
-        ) return false;
+        Fragment fragment = getSupportFragmentManager().findFragmentById(mFragmentView.getId());
+        // Allow starting the add account only from the main menu, should it be moved to fragment itself ?
+        if(!(fragment instanceof MainMenuFragment)) return false;
+
         Tools.swapFragment(this, SelectAuthFragment.class, SelectAuthFragment.TAG, true, null);
         return false;
     };
@@ -105,8 +105,8 @@ public class LauncherActivity extends BaseActivity {
     /* Listener for account deletion */
     private final View.OnClickListener mAccountDeleteButtonListener = v -> new AlertDialog.Builder(this)
             .setMessage(R.string.warning_remove_account)
-            .setNeutralButton(android.R.string.cancel, null)
-            .setPositiveButton(R.string.global_delete, (dialog, which) -> mAccountSpinner.removeCurrentAccount())
+            .setPositiveButton(android.R.string.cancel, null)
+            .setNeutralButton(R.string.global_delete, (dialog, which) -> mAccountSpinner.removeCurrentAccount())
             .show();
 
     private final ExtraListener<Boolean> mLaunchGameListener = (key, value) -> {
