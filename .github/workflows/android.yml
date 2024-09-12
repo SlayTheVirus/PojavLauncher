@@ -15,7 +15,7 @@ jobs:
     env:
       GPLAY_KEYSTORE_PASSWORD: ${{ secrets.GPLAY_KEYSTORE_PASSWORD }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -30,7 +30,7 @@ jobs:
       shell: bash
       
     - name: Cache gl4es
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       id: gl4es-cache
       with:
         path: gl4es/libs
@@ -38,7 +38,7 @@ jobs:
 
     - name: Get gl4es
       if: steps.gl4es-cache.outputs.cache-hit != 'true'
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         repository: 'PojavLauncherTeam/gl4es-114-extra'
         path: 'gl4es'
@@ -62,7 +62,7 @@ jobs:
         git push
     
     - name: Get JRE8
-      uses: dawidd6/action-download-artifact@v2
+      uses: dawidd6/action-download-artifact@v4
       with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: build.yml
@@ -73,7 +73,7 @@ jobs:
           name: jre8-pojav
     
     - name: Get JRE17
-      uses: dawidd6/action-download-artifact@v2
+      uses: dawidd6/action-download-artifact@v4
       with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: build.yml
